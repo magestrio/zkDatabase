@@ -4,6 +4,7 @@ import {
   TMerkleTreeInfo,
   TPagination,
   TPaginationReturn,
+  TMerkleJson
 } from '@zkdb/common';
 import { ModelMerkleTree } from '@zkdb/storage';
 import { ClientSession } from 'mongodb';
@@ -37,7 +38,7 @@ export async function getMerkleNodesByLevel(
   databaseName: string,
   nodeLevel: number,
   pagination?: TPagination
-): Promise<TPaginationReturn<TMerkleNode[]>> {
+): Promise<TPaginationReturn<TMerkleJson<TMerkleNode>[]>> {
   const modelMerkleTree = await ModelMerkleTree.load(databaseName);
 
   const zeroNodes = modelMerkleTree.getZeroNodes();
@@ -50,7 +51,7 @@ export async function getMerkleNodesByLevel(
     ).map(({ level, index, hash }) => ({
       level,
       index,
-      hash,
+      hash: hash.toString(),
       empty: zeroNodes[level].equals(Field(hash)).toBoolean(),
     }));
 
@@ -84,7 +85,7 @@ export async function getChildrenNodes(
   databaseName: string,
   parentLevel: number,
   parentIndex: bigint
-): Promise<TMerkleNode[]> {
+): Promise<TMerkleJson<TMerkleNode>[]> {
   if (!Number.isInteger(parentLevel) || parentLevel < 0) {
     throw new Error(
       `Invalid parentLevel: ${parentLevel}. It must be a non-negative integer.`
@@ -132,13 +133,13 @@ export async function getChildrenNodes(
 
   return [
     {
-      hash: leftNodeField,
+      hash: leftNodeField.toString(),
       index: Number(leftChildIndex),
       level: childrenLevel,
       empty: zeroNodes[childrenLevel].equals(leftNodeField).toBoolean(),
     },
     {
-      hash: rightNodeField,
+      hash: rightNodeField.toString(),
       index: Number(rightChildIndex),
       level: childrenLevel,
       empty: zeroNodes[childrenLevel].equals(rightNodeField).toBoolean(),
